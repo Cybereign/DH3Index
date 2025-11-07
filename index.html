@@ -839,8 +839,37 @@
             const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
             return hashHex;
         }
-
-        // 从GitHub加载配置
+async function loadConfigFromGitHub() {
+    showLoadingIndicator('正在从GitHub加载配置...');
+    
+    try {
+        const response = await fetch(GITHUB_CONFIG_URL);
+        console.log('响应状态:', response.status, response.statusText);
+        
+        if (!response.ok) {
+            throw new Error(`GitHub返回错误: ${response.status} ${response.statusText}`);
+        }
+        
+        const config = await response.json();
+        
+        // 验证配置结构
+        if (!config.users) {
+            throw new Error('配置文件缺少users字段');
+        }
+        
+        adminAccounts = config.users;
+        appConfig = config.settings || {};
+        console.log('✅ 成功加载', adminAccounts.length, '个用户');
+        
+    } catch (error) {
+        console.error('❌ 配置加载失败:', error);
+        showErrorMessage(`配置加载失败: ${error.message}，使用默认配置`);
+        useDefaultConfig();
+    } finally {
+        hideLoadingIndicator();
+    }
+}
+       /* // 从GitHub加载配置
         async function loadConfigFromGitHub() {
             showLoadingIndicator('正在从GitHub加载配置...');
             hideErrorMessage();
@@ -894,7 +923,7 @@
                 hideLoadingIndicator();
                 return false;
             }
-        }
+        }*/
 
         // 使用默认配置
         function useDefaultConfig() {
