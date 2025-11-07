@@ -862,6 +862,9 @@
         
         const config = await response.json();
         adminAccounts = config.users || [];
+
+		categoryMap = config.categories || getDefaultCategories(); // 确保有后备
+		console.log('类别映射:', categoryMap);
         console.log('✅ GitHub配置加载成功');
         
     } catch (error) {
