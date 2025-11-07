@@ -13,7 +13,7 @@
             box-sizing: border-box;
             font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
         }
-        
+    
         body {
             background-color: #f5f7fa;
             color: #333;
@@ -839,6 +839,18 @@
             const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
             return hashHex;
         }
+
+		// 调试函数：计算并显示123456的哈希值
+        async function debugHash() {
+            const testPassword = "whj";
+            const hash = await sha256(testPassword);
+            console.log(`调试信息：密码 "${testPassword}" 的SHA-256哈希值:`, hash);
+            console.log('存储的哈希值:', adminAccounts[0].passwordHash);
+            console.log('是否匹配:', hash === adminAccounts[0].passwordHash);
+        }
+
+        // 页面加载时运行调试
+        debugHash();
 		async function loadConfigFromGitHub() {
     try {
         // 移除时间戳参数，使用干净的URL
