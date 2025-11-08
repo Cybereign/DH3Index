@@ -827,7 +827,30 @@
         // 用户账户信息和配置
         let adminAccounts = [];
         let appConfig = {};
-        let categoryMap = {};
+
+        // === 修改点：在代码中固定定义类别映射 ===
+        const categoryMap = {
+            'contactinfo': { 
+                name: '联系方式', 
+                class: 'category-contactinfo'
+            },
+            'workscope': { 
+                name: '责任分工', 
+                class: 'category-workscope'
+            },
+            'phasereview': { 
+                name: '阶段评审', 
+                class: 'category-phasereview'
+            },
+            'developmentplan': { 
+                name: '开发计划', 
+                class: 'category-developmentplan'
+            },
+            'other': { 
+                name: '其他', 
+                class: 'category-other'
+            }
+        };
 
         // SHA-256哈希函数
         async function sha256(message) {
@@ -840,123 +863,27 @@
             return hashHex;
         }
 
-		// 调试函数：计算并显示123456的哈希值
-        async function debugHash() {
-            const testPassword = "whj";
-            const hash = await sha256(testPassword);
-            console.log(`调试信息：密码 "${testPassword}" 的SHA-256哈希值:`, hash);
-            console.log('存储的哈希值:', adminAccounts[0].passwordHash);
-            console.log('是否匹配:', hash === adminAccounts[0].passwordHash);
-        }
-
-        // 页面加载时运行调试
-        //debugHash();
-		async function loadConfigFromGitHub() {
-    try {
-        // 移除时间戳参数，使用干净的URL
-        const response = await fetch(GITHUB_CONFIG_URL);
-        
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
-        }
-        
-        const config = await response.json();
-        adminAccounts = config.users || [];
-
-		categoryMap = config.categories || getDefaultCategories(); // 确保有后备
-		console.log('类别映射:', categoryMap);
-        console.log('✅ GitHub配置加载成功');
-        
-    } catch (error) {
-        console.error('❌ GitHub配置加载失败:', error);
-        useDefaultConfig();
-    }
-}
-/*async function loadConfigFromGitHub() {
-    showLoadingIndicator('正在从GitHub加载配置...');
-    
-    try {
-        const response = await fetch(GITHUB_CONFIG_URL);
-        console.log('响应状态:', response.status, response.statusText);
-        
-        if (!response.ok) {
-            throw new Error(`GitHub返回错误: ${response.status} ${response.statusText}`);
-        }
-        
-        const config = await response.json();
-        
-        // 验证配置结构
-        if (!config.users) {
-            throw new Error('配置文件缺少users字段');
-        }
-        
-        adminAccounts = config.users;
-        appConfig = config.settings || {};
-        console.log('✅ 成功加载', adminAccounts.length, '个用户');
-        
-    } catch (error) {
-        console.error('❌ 配置加载失败:', error);
-        showErrorMessage(`配置加载失败: ${error.message}，使用默认配置`);
-        useDefaultConfig();
-    } finally {
-        hideLoadingIndicator();
-    }
-}*/
-       /* // 从GitHub加载配置
+        // 从GitHub加载配置
         async function loadConfigFromGitHub() {
-            showLoadingIndicator('正在从GitHub加载配置...');
-            hideErrorMessage();
-            
             try {
-                // 添加时间戳避免缓存
-                const url = `${GITHUB_CONFIG_URL}?t=${Date.now()}`;
-                
-                const response = await fetch(url, {
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'application/json',
-                        'Cache-Control': 'no-cache'
-                    }
-                });
+                // 移除时间戳参数，使用干净的URL
+                const response = await fetch(GITHUB_CONFIG_URL);
                 
                 if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    throw new Error(`HTTP ${response.status}`);
                 }
                 
                 const config = await response.json();
-                
-                // 验证配置格式
-                if (!config.users || !Array.isArray(config.users)) {
-                    throw new Error('配置文件格式错误: 缺少users数组');
-                }
-                
-                // 应用配置
-                adminAccounts = config.users;
+                adminAccounts = config.users || [];
                 appConfig = config.settings || {};
-                categoryMap = config.categories || getDefaultCategories();
                 
-                console.log(`从GitHub成功加载配置: ${adminAccounts.length} 个用户`);
-                
-                // 更新UI显示配置信息
-                updateConfigInfo(config);
-                
-                // 保存到本地存储作为缓存
-                localStorage.setItem('githubConfigCache', JSON.stringify({
-                    config: config,
-                    timestamp: Date.now()
-                }));
-                
-                hideLoadingIndicator();
-                return true;
+                console.log('✅ GitHub配置加载成功');
                 
             } catch (error) {
-                console.error('从GitHub加载配置失败:', error);
-                showErrorMessage(`配置加载失败: ${error.message}，使用默认配置`);
+                console.error('❌ GitHub配置加载失败:', error);
                 useDefaultConfig();
-                hideLoadingIndicator();
-                return false;
             }
-        }*/
+        }
 
         // 使用默认配置
         function useDefaultConfig() {
@@ -980,24 +907,11 @@
                 maxLoginAttempts: 5
             };
             
-            categoryMap = getDefaultCategories();
-            
             updateConfigInfo({
                 project: 'DH3项目HelpMe索引表',
                 version: '默认配置',
                 lastUpdated: new Date().toISOString()
             });
-        }
-
-        // 获取默认分类映射
-        function getDefaultCategories() {
-            return {
-                'contactinfo': '联系方式',
-                'workscope': '责任分工',
-                'phasereview': '阶段评审',
-                'developmentplan': '开发计划',
-                'other': '其他'
-            };
         }
 
         // 更新配置信息显示
@@ -1295,10 +1209,6 @@
             passwordInput.value = '';
         }
 
-        // 其余的函数保持不变（renderTable, openFolder, updateStats, handleSearch, handleFilter, filterTable, openModal, closeModalFunc, saveItem, generateId, deleteItem, exportData, downloadUpdatedHTML, generateUpdatedHTML, resetData）
-        // 这些函数与之前版本功能相同，为节省空间不再重复
-		
-
         // 处理路径类型变化
         function handlePathTypeChange(e) {
             pathTypeButtons.forEach(btn => btn.classList.remove('active'));
@@ -1328,8 +1238,11 @@
                 const iconClass = isUrl ? 'fas fa-external-link-alt' : 'fas fa-folder-open';
                 const badgeClass = isUrl ? 'badge-url' : 'badge-folder';
                 const badgeText = isUrl ? '网页' : '文件夹';
-                const categoryName = categoryMap[item.category] || item.category;
-                const categoryClass = `category-${item.category}`;
+                
+                // === 修改点：直接从固定的categoryMap获取类别信息 ===
+                const categoryInfo = categoryMap[item.category] || categoryMap.other;
+                const categoryName = categoryInfo.name;
+                const categoryClass = categoryInfo.class;
                 
                 // 为URL链接添加target="_blank"，文件夹链接使用自定义处理
                 if (isUrl) {
@@ -1473,7 +1386,7 @@
             if (searchTerm) {
                 filteredData = filteredData.filter(item => 
                     item.title.toLowerCase().includes(searchTerm) || 
-                    (categoryMap[item.category] || item.category).toLowerCase().includes(searchTerm) ||
+                    (categoryMap[item.category]?.name || item.category).toLowerCase().includes(searchTerm) ||
                     item.note.toLowerCase().includes(searchTerm) ||
                     item.path.toLowerCase().includes(searchTerm)
                 );
